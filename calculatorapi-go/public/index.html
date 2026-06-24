@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculatrice Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        /* Masquer les flèches par défaut des inputs number */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="bg-[#f4f4f5] text-[#18181b] min-h-screen flex items-center justify-center p-4 antialiased">
+
+    <div class="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-zinc-100 w-full max-w-sm overflow-hidden flex flex-col">
+        
+        <div class="bg-zinc-900 text-white p-6 pt-8 flex flex-col justify-end items-end min-h-[160px] relative">
+            <div id="historyLog" class="text-xs text-zinc-500 space-y-1 w-full text-right max-h-[60px] overflow-y-auto mb-2 scrollbar-none">
+                </div>
+            
+            <div class="flex items-center gap-1 text-sm text-zinc-400 font-medium tracking-tight mb-1">
+                <span id="displayA"></span>
+                <span id="displayOp" class="text-zinc-500"></span>
+                <span id="displayB"></span>
+            </div>
+            
+            <div id="mainDisplay" class="text-3xl font-bold tracking-tight text-white transition-all duration-150">0</div>
+        </div>
+
+        <div class="p-6 bg-white space-y-4">
+            <div class="grid grid-cols-2 gap-2 text-center text-xs font-semibold tracking-wider text-zinc-400 uppercase">
+                <button id="targetA" class="py-2 border-b-2 border-black text-black transition-all">Nombre A</button>
+                <button id="targetB" class="py-2 border-b-2 border-transparent transition-all">Nombre B</button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-2">
+                <button type="button" onclick="pressNum(7)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">7</button>
+                <button type="button" onclick="pressNum(8)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">8</button>
+                <button type="button" onclick="pressNum(9)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">9</button>
+                <button type="button" onclick="pressOp('divide', '÷')" class="bg-zinc-100 hover:bg-zinc-200 font-bold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-zinc-600">÷</button>
+                
+                <button type="button" onclick="pressNum(4)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">4</button>
+                <button type="button" onclick="pressNum(5)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">5</button>
+                <button type="button" onclick="pressNum(6)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">6</button>
+                <button type="button" onclick="pressOp('multiply', '✕')" class="bg-zinc-100 hover:bg-zinc-200 font-bold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-zinc-600">✕</button>
+                
+                <button type="button" onclick="pressNum(1)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">1</button>
+                <button type="button" onclick="pressNum(2)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">2</button>
+                <button type="button" onclick="pressNum(3)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">3</button>
+                <button type="button" onclick="pressOp('subtract', '-')" class="bg-zinc-100 hover:bg-zinc-200 font-bold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-zinc-600">-</button>
+                
+                <button type="button" onclick="pressClear()" class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-xs tracking-wider uppercase">C</button>
+                <button type="button" onclick="pressNum(0)" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">0</button>
+                <button type="button" onclick="pressDot()" class="bg-zinc-50 hover:bg-zinc-100 font-semibold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-sm">.</button>
+                <button type="button" onclick="pressOp('add', '+')" class="bg-zinc-100 hover:bg-zinc-200 font-bold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-zinc-600">+</button>
+            </div>
+
+            <button id="btnEqual" onclick="triggerCalculation()" 
+                class="w-full bg-black hover:bg-zinc-800 text-white font-medium text-sm py-4 rounded-2xl transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98]">
+                Confirmer l'opération
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let valA = '';
+        let valB = '';
+        let opCode = '';
+        let opSymbol = '';
+        let activeTarget = 'A'; // Peut être 'A' ou 'B'
+
+        const displayA = document.getElementById('displayA');
+        const displayB = document.getElementById('displayB');
+        const displayOp = document.getElementById('displayOp');
+        const mainDisplay = document.getElementById('mainDisplay');
+        const historyLog = document.getElementById('historyLog');
+        const targetA = document.getElementById('targetA');
+        const targetB = document.getElementById('targetB');
+
+        // Gestion de la cible de saisie manuelle au clic sur les onglets
+        targetA.addEventListener('click', () => switchTarget('A'));
+        targetB.addEventListener('click', () => switchTarget('B'));
+
+        function switchTarget(target) {
+            activeTarget = target;
+            if (target === 'A') {
+                targetA.classList.add('border-black', 'text-black');
+                targetB.classList.remove('border-black', 'text-black');
+            } else {
+                targetB.classList.add('border-black', 'text-black');
+                targetA.classList.remove('border-black', 'text-black');
+            }
+        }
+
+        function pressNum(num) {
+            if (activeTarget === 'A') {
+                valA += num;
+                displayA.textContent = valA;
+                mainDisplay.textContent = valA;
+            } else {
+                valB += num;
+                displayB.textContent = valB;
+                mainDisplay.textContent = valB;
+            }
+        }
+
+        function pressDot() {
+            if (activeTarget === 'A') {
+                if (!valA.includes('.')) { valA += valA === '' ? '0.' : '.'; displayA.textContent = valA; mainDisplay.textContent = valA; }
+            } else {
+                if (!valB.includes('.')) { valB += valB === '' ? '0.' : '.'; displayB.textContent = valB; mainDisplay.textContent = valB; }
+            }
+        }
+
+        function pressOp(code, symbol) {
+            if(valA === '') return;
+            opCode = code;
+            opSymbol = symbol;
+            displayOp.textContent = ` ${symbol} `;
+            switchTarget('B');
+        }
+
+        function pressClear() {
+            valA = ''; valB = ''; opCode = ''; opSymbol = '';
+            displayA.textContent = ''; displayB.textContent = ''; displayOp.textContent = '';
+            mainDisplay.textContent = '0';
+            mainDisplay.classList.remove('text-red-500');
+            mainDisplay.classList.add('text-white');
+            switchTarget('A');
+        }
+
+        async function triggerCalculation() {
+            if (!valA || !valB || !opCode) return;
+
+            try {
+                const response = await fetch(`/calculate?operation=${opCode}&a=${valA}&b=${valB}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    mainDisplay.classList.remove('text-red-500');
+                    mainDisplay.classList.add('text-white');
+                    mainDisplay.textContent = data.result;
+
+                    // Ajouter à l'historique interne
+                    const entry = document.createElement('div');
+                    entry.textContent = `${valA} ${opSymbol} ${valB} = ${data.result}`;
+                    historyLog.appendChild(entry);
+                    historyLog.scrollTop = historyLog.scrollHeight;
+
+                    // Préparer la suite : le résultat devient le nouveau Nombre A
+                    valA = data.result.toString();
+                    valB = ''; opCode = ''; opSymbol = '';
+                    displayA.textContent = valA;
+                    displayB.textContent = '';
+                    displayOp.textContent = '';
+                    switchTarget('A');
+                } else {
+                    mainDisplay.classList.add('text-red-500');
+                    mainDisplay.textContent = "Error";
+                    alert(`Erreur API: ${data.error}`);
+                }
+            } catch (err) {
+                mainDisplay.classList.add('text-red-500');
+                mainDisplay.textContent = "Fail";
+            }
+        }
+    </script>
+</body>
+</html>
