@@ -1,1 +1,15 @@
-calculatorapi-js/node_modules/
+# JS
+**/node_modules/
+
+# PYTHON
+**/.venv/
+**/venv/
+__pycache__/
+*.pyc
+
+#GO
+*.out
+ma_calculatrice
+
+# mac
+.DS_Store
